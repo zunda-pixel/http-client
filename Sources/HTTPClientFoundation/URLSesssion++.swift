@@ -14,7 +14,7 @@ extension URLSession: HTTPClientProtocol {
   public typealias Body = Foundation.Data
   public typealias Data = Foundation.Data
   
-  public func execute(for request: HTTPTypes.HTTPRequest, body: Data?) async throws -> (Data, HTTPTypes.HTTPResponse) {
+  public func execute(for request: HTTPTypes.HTTPRequest, from body: Data?) async throws -> (Data, HTTPTypes.HTTPResponse) {
     if let body {
       try await self.upload(for: request, from: body)
     } else {
