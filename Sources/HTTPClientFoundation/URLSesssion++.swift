@@ -10,7 +10,7 @@ import FoundationNetworking
 #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS) || compiler(>=6.0)
 
 @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, visionOS 1.0, *)
-extension URLSession: @retroactive HTTPClientProtocol {
+extension URLSession: HTTPClientProtocol {
   public typealias Body = Foundation.Data
   public typealias Data = Foundation.Data
   
