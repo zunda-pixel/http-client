@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-  name: "HTTPClient",
+  name: "http-client",
   products: [
     .library(
       name: "HTTPClient",
