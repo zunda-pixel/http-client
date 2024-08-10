@@ -1,2 +1,5 @@
 # HTTPClient
-HTTPClient protocol for Swift
+
+HTTPClient protocol for API Client
+
+
