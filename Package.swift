@@ -23,7 +23,7 @@ let package = Package(
     ),
   ],
   dependencies: [
-    .package(url: "https://github.com/apple/swift-http-types", from: "1.3.0"),
+    .package(url: "https://github.com/apple/swift-http-types", from: "1.3.0")
   ],
   targets: [
     .target(
@@ -36,7 +36,7 @@ let package = Package(
     .target(
       name: "HTTPClientFoundation",
       dependencies: [
-        .target(name: "HTTPClient"),
+        .target(name: "HTTPClient")
       ]
     ),
   ]

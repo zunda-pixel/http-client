@@ -1,7 +1,6 @@
 import HTTPTypes
 
-public protocol HTTPClientProtocol: Sendable {
-  associatedtype Body
+public protocol HTTPClientProtocol {
   associatedtype Data
-  func execute(for request: HTTPRequest, from body: Body?) async throws -> (Data, HTTPResponse)
+  func execute(for request: HTTPRequest, from body: Data?) async throws -> (Data, HTTPResponse)
 }
