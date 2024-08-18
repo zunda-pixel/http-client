@@ -11,9 +11,9 @@ import HTTPTypesFoundation
   @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, visionOS 1.0, *)
   extension URLSession: HTTPClientProtocol {
     public func execute(
-      for request: HTTPTypes.HTTPRequest,
-      from body: Foundation.Data?
-    ) async throws -> (Data, HTTPTypes.HTTPResponse) {
+      for request: HTTPRequest,
+      from body: Data?
+    ) async throws -> (Data, HTTPResponse) {
       if let body {
         try await self.upload(for: request, from: body)
       } else {
