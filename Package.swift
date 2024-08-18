@@ -16,11 +16,7 @@ let package = Package(
     .library(
       name: "HTTPClient",
       targets: ["HTTPClient"]
-    ),
-    .library(
-      name: "HTTPClientFoundation",
-      targets: ["HTTPClientFoundation"]
-    ),
+    )
   ],
   dependencies: [
     .package(url: "https://github.com/apple/swift-http-types", from: "1.3.0")
@@ -32,12 +28,6 @@ let package = Package(
         .product(name: "HTTPTypes", package: "swift-http-types"),
         .product(name: "HTTPTypesFoundation", package: "swift-http-types"),
       ]
-    ),
-    .target(
-      name: "HTTPClientFoundation",
-      dependencies: [
-        .target(name: "HTTPClient")
-      ]
-    ),
+    )
   ]
 )
