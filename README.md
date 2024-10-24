@@ -1,5 +1,8 @@
 # HTTPClient
 
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fzunda-pixel%2Fhttp-client%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/zunda-pixel/http-client)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fzunda-pixel%2Fhttp-client%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/zunda-pixel/http-client)
+
 HTTPClient protocol for API Client Library
 
 ```swift
@@ -14,7 +17,7 @@ let api = GitHubAPI(
 
 let user = api.user(id: <#user_id#>)
 
-struct GitHubAPI<HTTPClient: HTTPClientProtocol> where HTTPClient.Data == Foundation.Data {
+struct GitHubAPI<HTTPClient: HTTPClientProtocol> {
   let token: String
   let httpClient: HTTPClient
 
