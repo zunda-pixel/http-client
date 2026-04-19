@@ -25,8 +25,8 @@ extension HTTPClientProtocol where Self == AsyncHTTPClient.HTTPClient {
   }
 }
 
-private extension AsyncHTTPClient.HTTPClient.Request {
-  init(
+extension AsyncHTTPClient.HTTPClient.Request {
+  fileprivate init(
     request: HTTPRequest,
     body: Data?
   ) throws {
@@ -43,8 +43,8 @@ private extension AsyncHTTPClient.HTTPClient.Request {
   }
 }
 
-private extension HTTPHeaders {
-  init(_ fields: HTTPFields) {
+extension HTTPHeaders {
+  fileprivate init(_ fields: HTTPFields) {
     self.init()
     for field in fields {
       self.add(name: field.name.rawName, value: field.value)
@@ -52,8 +52,8 @@ private extension HTTPHeaders {
   }
 }
 
-private extension HTTPResponse {
-  init(_ response: AsyncHTTPClient.HTTPClient.Response) {
+extension HTTPResponse {
+  fileprivate init(_ response: AsyncHTTPClient.HTTPClient.Response) {
     self.init(
       status: .init(
         code: Int(response.status.code),
@@ -64,8 +64,8 @@ private extension HTTPResponse {
   }
 }
 
-private extension HTTPFields {
-  init(_ headers: HTTPHeaders) {
+extension HTTPFields {
+  fileprivate init(_ headers: HTTPHeaders) {
     self.init()
     for header in headers {
       guard let name = HTTPField.Name(header.name) else {
