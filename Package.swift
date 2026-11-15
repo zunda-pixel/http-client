@@ -18,6 +18,13 @@ let package = Package(
       targets: ["HTTPClient"]
     )
   ],
+  traits: [
+    .trait(
+      name: "AsyncHTTPClient",
+      description: "Conforms AsyncHTTPClient's HTTPClient to HTTPClientProtocol (adds SwiftNIO)."
+    ),
+    .default(enabledTraits: []),
+  ],
   dependencies: [
     .package(url: "https://github.com/apple/swift-http-types", from: "1.3.0"),
     .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.33.0"),
@@ -29,10 +36,23 @@ let package = Package(
         .product(
           name: "AsyncHTTPClient",
           package: "async-http-client",
+          condition: .when(traits: ["AsyncHTTPClient"])
         ),
         .product(name: "HTTPTypes", package: "swift-http-types"),
         .product(name: "HTTPTypesFoundation", package: "swift-http-types"),
       ]
-    )
+    ),
+    .testTarget(
+      name: "HTTPClientTests",
+      dependencies: [
+        .target(name: "HTTPClient"),
+        .product(
+          name: "AsyncHTTPClient",
+          package: "async-http-client",
+          condition: .when(traits: ["AsyncHTTPClient"])
+        ),
+        .product(name: "HTTPTypes", package: "swift-http-types"),
+      ]
+    ),
   ]
 )
