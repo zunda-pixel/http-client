@@ -29,6 +29,8 @@ import Testing
     #expect(response.headerFields[.echoMethod] == "GET")
     #expect(response.headerFields[.echoURL] == "https://example.com/users?id=1")
     #expect(response.headerFields[.echoAuthorization] == "Bearer token")
+    // The request holds no body, not even an empty one.
+    #expect(response.headerFields[.echoBodySource] == nil)
     #expect(data.isEmpty)
   }
 
@@ -51,6 +53,7 @@ import Testing
     // swift-corelibs-foundation doesn't hand an uploaded body to a URL protocol, so the stub
     // can echo it only on Apple platforms.
     #if !canImport(FoundationNetworking)
+      #expect(response.headerFields[.echoBodySource] == "httpBodyStream")
       #expect(String(decoding: data, as: UTF8.self) == "hello")
     #endif
   }
@@ -119,9 +122,9 @@ private func execute(
   try await client.execute(for: request, from: body)
 }
 
-/// Answers every request without the network: it echoes the method, URL, and authorization in
-/// the response headers, and the uploaded body as the response body. It doesn't answer a request
-/// with `X-Echo-No-Response`.
+/// Answers every request without the network: it echoes the method, URL, authorization, and
+/// where the request holds a body in the response headers, and the uploaded body as the response
+/// body. It doesn't answer a request with `X-Echo-No-Response`.
 private final class EchoURLProtocol: URLProtocol {
   private static let unanswered = AsyncStream.makeStream(of: Void.self)
 
@@ -147,6 +150,14 @@ private final class EchoURLProtocol: URLProtocol {
     headers[HTTPField.Name.echoAuthorization.rawName] = request.value(
       forHTTPHeaderField: "Authorization"
     )
+    headers[HTTPField.Name.echoBodySource.rawName] =
+      if request.httpBody != nil {
+        "httpBody"
+      } else if request.httpBodyStream != nil {
+        "httpBodyStream"
+      } else {
+        nil
+      }
     let response = HTTPURLResponse(
       url: request.url!,
       statusCode: status,

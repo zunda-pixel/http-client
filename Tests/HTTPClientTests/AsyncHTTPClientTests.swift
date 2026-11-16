@@ -27,6 +27,8 @@
         #expect(response.headerFields[.echoMethod] == "POST")
         #expect(response.headerFields[.echoURL] == server.url("/users?id=1").absoluteString)
         #expect(response.headerFields[.echoAuthorization] == "Bearer token")
+        #expect(response.headerFields[.echoContentLength] == "5")
+        #expect(response.headerFields[.echoTransferEncoding] == nil)
         #expect(String(decoding: data, as: UTF8.self) == "hello")
       }
     }
@@ -44,6 +46,9 @@
         #expect(response.status == .ok)
         #expect(response.headerFields[.echoMethod] == "GET")
         #expect(response.headerFields[.echoAuthorization] == nil)
+        // The request has no body framing, neither a length nor chunks.
+        #expect(response.headerFields[.echoContentLength] == nil)
+        #expect(response.headerFields[.echoTransferEncoding] == nil)
         #expect(data.isEmpty)
       }
     }

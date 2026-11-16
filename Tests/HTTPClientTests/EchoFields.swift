@@ -19,4 +19,11 @@ extension HTTPField.Name {
   static let echoURL = Self("X-Echo-URL")!
   /// The `Authorization` the stub received.
   static let echoAuthorization = Self("X-Echo-Authorization")!
+  /// The `Content-Length` the stub received (`EchoServer` only).
+  static let echoContentLength = Self("X-Echo-Content-Length")!
+  /// The `Transfer-Encoding` the stub received (`EchoServer` only).
+  static let echoTransferEncoding = Self("X-Echo-Transfer-Encoding")!
+  /// Where the `URLRequest` the stub received holds a body, `httpBody` or `httpBodyStream`, and
+  /// absent when it holds none (`EchoURLProtocol` only).
+  static let echoBodySource = Self("X-Echo-Body-Source")!
 }

@@ -68,10 +68,11 @@
     }
   }
 
-  /// Answers a request with the status of its `X-Echo-Status`; its method, URL, and authorization
-  /// in the headers; and its `X-Echo-Body`, or else its body, as the body. It doesn't answer a
-  /// request with `X-Echo-No-Response`, and answers a request with `X-Echo-Unfinished-Body` with a
-  /// body that doesn't end. Every response has `Connection: close`.
+  /// Answers a request with the status of its `X-Echo-Status`; its method, URL, `Authorization`,
+  /// `Content-Length`, and `Transfer-Encoding` in the headers; and its `X-Echo-Body`, or else its
+  /// body, as the body. It doesn't answer a request with `X-Echo-No-Response`, and answers a
+  /// request with `X-Echo-Unfinished-Body` with a body that doesn't end. Every response has
+  /// `Connection: close`.
   private final class EchoHandler: ChannelInboundHandler {
     /// The size of the body that doesn't end. Writing it completes only after the client has read
     /// most of it: it's several times the socket buffers of both ends (up to 4 MB each on macOS,
@@ -145,8 +146,15 @@
         // its request on it, to this handler, whose streams have finished.
         "Connection": "close",
       ]
-      if let authorization = fields.first(name: "Authorization") {
-        headers.add(name: HTTPField.Name.echoAuthorization.rawName, value: authorization)
+      let echoedFields: KeyValuePairs<String, HTTPField.Name> = [
+        "Authorization": .echoAuthorization,
+        "Content-Length": .echoContentLength,
+        "Transfer-Encoding": .echoTransferEncoding,
+      ]
+      for (name, echo) in echoedFields {
+        for value in fields[name] {
+          headers.add(name: echo.rawName, value: value)
+        }
       }
       let response = HTTPResponseHead(version: head.version, status: status, headers: headers)
       context.write(wrapOutboundOut(.head(response)), promise: nil)

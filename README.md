@@ -72,8 +72,8 @@ let user = try await api.user(login: "zunda-pixel")
 ```
 
 `URLSession` conforms on every platform the package supports (macOS 10.15, iOS 13, watchOS 6,
-tvOS 13, and visionOS 1 or later, and Linux). On Linux, `URLSession` is in FoundationNetworking,
-so import it to name `URLSession`.
+tvOS 13, visionOS 1, and Mac Catalyst 14 or later, and Linux). On Linux, `URLSession` is in
+FoundationNetworking, so import it to name `URLSession`.
 
 ## AsyncHTTPClient
 
