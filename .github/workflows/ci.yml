@@ -8,7 +8,8 @@ jobs:
     container: swift:latest
     steps:
     - uses: actions/checkout@v7.0.1
-    - run: swift build
+    - run: swift test
+    - run: swift test --traits AsyncHTTPClient
   lint:
     runs-on: ubuntu-latest
     container: swift:latest

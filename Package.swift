@@ -1,22 +1,29 @@
-// swift-tools-version: 6.1
+// swift-tools-version: 6.4
 
 import PackageDescription
 
 let package = Package(
   name: "http-client",
   platforms: [
-    .macOS(.v10_15),
-    .iOS(.v13),
-    .watchOS(.v6),
-    .tvOS(.v13),
+    .macOS(.v12),
+    .iOS(.v15),
+    .watchOS(.v9),
+    .tvOS(.v15),
     .visionOS(.v1),
-    .macCatalyst(.v14),
+    .macCatalyst(.v15),
   ],
   products: [
     .library(
       name: "HTTPClient",
       targets: ["HTTPClient"]
     )
+  ],
+  traits: [
+    .trait(
+      name: "AsyncHTTPClient",
+      description: "Conforms AsyncHTTPClient's HTTPClient to HTTPClientProtocol (adds SwiftNIO)."
+    ),
+    .default(enabledTraits: []),
   ],
   dependencies: [
     .package(url: "https://github.com/apple/swift-http-types", from: "1.3.0"),
@@ -29,10 +36,24 @@ let package = Package(
         .product(
           name: "AsyncHTTPClient",
           package: "async-http-client",
+          condition: .when(traits: ["AsyncHTTPClient"])
         ),
         .product(name: "HTTPTypes", package: "swift-http-types"),
         .product(name: "HTTPTypesFoundation", package: "swift-http-types"),
       ]
-    )
+    ),
+    .testTarget(
+      name: "HTTPClientTests",
+      dependencies: [
+        .target(name: "HTTPClient"),
+        .product(
+          name: "AsyncHTTPClient",
+          package: "async-http-client",
+          condition: .when(traits: ["AsyncHTTPClient"])
+        ),
+        .product(name: "HTTPTypes", package: "swift-http-types"),
+        .product(name: "HTTPTypesFoundation", package: "swift-http-types"),
+      ]
+    ),
   ]
 )
