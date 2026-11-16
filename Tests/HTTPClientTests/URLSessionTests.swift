@@ -78,6 +78,36 @@ import Testing
       try await execute(request, from: nil, with: .urlSession(session))
     }
   }
+
+  // Swift Testing has no default time limit, so a request that hangs would otherwise keep the
+  // test running until CI's job timeout.
+  @Test(.timeLimit(.minutes(1)))
+  func cancelsTheRequestWhenTheTaskIsCancelled() async throws {
+    let request = HTTPRequest(
+      method: .get,
+      scheme: "https",
+      authority: "example.com",
+      path: "/slow",
+      headerFields: [.echoNoResponse: "1"]
+    )
+    let session = session
+
+    await withTaskGroup(of: Void.self) { group in
+      group.addTask {
+        let error = await #expect(throws: URLError.self) {
+          try await execute(request, from: nil, with: .urlSession(session))
+        }
+        #expect(error?.code == .cancelled)
+      }
+      group.addTask {
+        for await _ in EchoURLProtocol.unansweredRequests { return }
+      }
+      // Cancels the request once the stub has it. Not waiting for the stub alone: a request that
+      // ends before it reaches the stub would leave that wait unfinished.
+      _ = await group.next()
+      group.cancelAll()
+    }
+  }
 }
 
 /// Calls the client through the protocol, as an API client does.
@@ -90,13 +120,23 @@ private func execute(
 }
 
 /// Answers every request without the network: it echoes the method, URL, and authorization in
-/// the response headers, and the uploaded body as the response body.
+/// the response headers, and the uploaded body as the response body. It doesn't answer a request
+/// with `X-Echo-No-Response`.
 private final class EchoURLProtocol: URLProtocol {
+  private static let unanswered = AsyncStream.makeStream(of: Void.self)
+
+  /// Yields each time a request with `X-Echo-No-Response` starts loading.
+  static var unansweredRequests: AsyncStream<Void> { unanswered.stream }
+
   override class func canInit(with request: URLRequest) -> Bool { true }
 
   override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
   override func startLoading() {
+    guard request.value(forHTTPHeaderField: HTTPField.Name.echoNoResponse.rawName) == nil else {
+      Self.unanswered.continuation.yield()
+      return
+    }
     let status =
       request.value(forHTTPHeaderField: HTTPField.Name.echoStatus.rawName).flatMap { Int($0) }
       ?? 200

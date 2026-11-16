@@ -3,6 +3,9 @@
   import Foundation
   import HTTPClient
   import HTTPTypes
+  // For `HTTPRequest(method:url:headerFields:)`, which is in HTTPTypesFoundation before
+  // swift-http-types 1.5.0.
+  import HTTPTypesFoundation
   import Testing
 
   @Suite struct AsyncHTTPClientTests {
@@ -71,20 +74,30 @@
       }
     }
 
-    @Test func cancelsTheRequestWhenTheTaskIsCancelled() async throws {
+    // Swift Testing has no default time limit, so a request that hangs would otherwise keep the
+    // test running until CI's job timeout.
+    @Test(.timeLimit(.minutes(1)))
+    func cancelsTheRequestWhenTheTaskIsCancelled() async throws {
       try await EchoServer.run { server in
-        var request = HTTPRequest(method: .get, url: server.url("/slow"))
-        request.headerFields[.echoNoResponse] = "1"
-        var requests = server.requests.makeAsyncIterator()
+        let request = HTTPRequest(
+          method: .get,
+          url: server.url("/slow"),
+          headerFields: [.echoNoResponse: "1"]
+        )
 
-        let task = Task {
-          try await execute(request, from: nil, with: .asyncHTTPClient(.shared))
-        }
-        _ = await requests.next()
-        task.cancel()
-
-        await #expect(throws: CancellationError.self) {
-          try await task.value
+        await withTaskGroup(of: Void.self) { group in
+          group.addTask {
+            await #expect(throws: CancellationError.self) {
+              try await execute(request, from: nil, with: .asyncHTTPClient(.shared))
+            }
+          }
+          group.addTask {
+            for await _ in server.requests { return }
+          }
+          // Cancels the request once the server has it. Not waiting for the server alone: a
+          // request that ends before it reaches the server would leave that wait unfinished.
+          _ = await group.next()
+          group.cancelAll()
         }
       }
     }

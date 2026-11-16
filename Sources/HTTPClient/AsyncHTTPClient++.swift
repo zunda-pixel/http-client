@@ -4,6 +4,8 @@
   import AsyncHTTPClient
   import Foundation
   import HTTPTypes
+  // For `HTTPRequest.url`, which is in HTTPTypesFoundation before swift-http-types 1.5.0.
+  import HTTPTypesFoundation
   import NIOCore
   import NIOHTTP1
 

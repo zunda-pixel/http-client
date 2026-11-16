@@ -2,10 +2,12 @@ name: CI
 
 on: pull_request
 
+# The jobs take a few minutes. The limits stop a hung test well before GitHub's default of 6 hours.
 jobs:
   build:
     runs-on: ubuntu-latest
     container: swift:latest
+    timeout-minutes: 20
     steps:
     - uses: actions/checkout@v7.0.1
     - name: Check that Package.resolved is the resolution without traits
@@ -29,6 +31,7 @@ jobs:
     # swift-corelibs-foundation doesn't hand an uploaded body to a URLProtocol, so only Apple
     # platforms check the body that URLSession uploads.
     runs-on: macos-latest
+    timeout-minutes: 20
     steps:
     - uses: actions/checkout@v7.0.1
     - name: Test without traits
@@ -38,6 +41,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     container: swift:latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7.0.1
       - run: swift format lint -r -p -s .

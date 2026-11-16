@@ -9,7 +9,7 @@
   /// AsyncHTTPClient's requests over a real connection without the network.
   struct EchoServer: Sendable {
     private let port: Int
-    /// Yields each time the head of a request arrives.
+    /// Yields each time the head of a request arrives, and finishes when `run(_:)` returns.
     let requests: AsyncStream<Void>
 
     /// The URL of `path` (with its query) on this server.
@@ -20,6 +20,7 @@
     /// Runs `body` with a server, and closes the server when `body` returns.
     static func run(_ body: (EchoServer) async throws -> Void) async throws {
       let (requests, received) = AsyncStream.makeStream(of: Void.self)
+      defer { received.finish() }
       let channel = try await ServerBootstrap(group: MultiThreadedEventLoopGroup.singleton)
         .serverChannelOption(.socketOption(.so_reuseaddr), value: 1)
         .childChannelInitializer { channel in

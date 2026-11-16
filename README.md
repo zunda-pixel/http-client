@@ -45,9 +45,15 @@ enum GitHubAPIError: Error {
 }
 ```
 
-`execute(for:from:)` returns the response whatever its status, and throws only when no response
-arrives. `HTTPClientProtocol` refines `Sendable`, so an API client can call one client from many
-tasks at once (for example, from the child tasks of a task group).
+`execute(for:from:)` doesn't throw for an error status such as 4xx or 5xx: it returns the response
+whatever its status. It throws when it can't send the request or can't receive the whole response
+with its body, for example when the connection drops, a timeout passes, or redirects loop. The
+errors, and the cases that throw, are those of the HTTP stack, so they differ between `URLSession`
+and AsyncHTTPClient. For example, both cancel the request when the task is cancelled, and then
+`URLSession` throws `URLError(.cancelled)` and AsyncHTTPClient throws `CancellationError`.
+
+`HTTPClientProtocol` refines `Sendable`, so an API client can call one client from many tasks at
+once (for example, from the child tasks of a task group).
 
 ## URLSession
 
@@ -106,7 +112,8 @@ SwiftPM enables a trait for the whole package graph when any package enables it.
 http-client through another package (an API client library), add http-client to your own
 dependencies with the trait, as above.
 
-This setup was checked with SwiftPM 6.4.2. SwiftPM 6.4.2 and earlier can fail with "exhausted
+This setup was checked with SwiftPM 6.1.3 and 6.4.2, including through API client libraries that
+require http-client `from: "0.3.0"`. SwiftPM 6.4.2 and earlier can fail with "exhausted
 attempts to resolve the dependencies graph" when only some of the packages that depend on
 http-client ask for the trait: for example, when you require http-client by `branch:` or `path:`
 and another package enables the trait, or when the request comes from a package deeper in the

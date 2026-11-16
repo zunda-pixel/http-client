@@ -28,7 +28,9 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/apple/swift-http-types", from: "1.3.0"),
     .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.33.0"),
-    .package(url: "https://github.com/apple/swift-nio.git", from: "2.81.0"),
+    // Not 2.81.0, which async-http-client 1.33.0 asks for: the swift-nio-http2 it needs (1.36.0 or
+    // later) asks for 2.82.0, so a graph with async-http-client never resolves to 2.81.0.
+    .package(url: "https://github.com/apple/swift-nio.git", from: "2.82.0"),
   ],
   targets: [
     .target(
@@ -78,6 +80,7 @@ let package = Package(
           condition: .when(traits: ["AsyncHTTPClient"])
         ),
         .product(name: "HTTPTypes", package: "swift-http-types"),
+        .product(name: "HTTPTypesFoundation", package: "swift-http-types"),
       ]
     ),
   ]
