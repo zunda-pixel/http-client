@@ -71,19 +71,18 @@ let api = GitHubAPI(token: "<#token#>", httpClient: .urlSession(.shared))
 let user = try await api.user(login: "zunda-pixel")
 ```
 
-`URLSession` conforms on every platform the package supports (macOS 10.15, iOS 13, watchOS 6,
-tvOS 13, visionOS 1, and Mac Catalyst 14 or later, and Linux). On Linux, `URLSession` is in
+`URLSession` conforms on every platform the package supports (macOS 12, iOS 15, watchOS 9,
+tvOS 15, visionOS 1, and Mac Catalyst 15 or later, and Linux). On Linux, `URLSession` is in
 FoundationNetworking, so import it to name `URLSession`.
 
 ## AsyncHTTPClient
 
 The conformance of AsyncHTTPClient's `HTTPClient` is behind the `AsyncHTTPClient` trait, so that
-packages that only use `URLSession` don't build SwiftNIO. With SwiftPM 6.2 or later, they don't
-fetch it either; SwiftPM 6.1 still resolves and fetches it. Enable the trait where you depend on
-http-client:
+packages that only use `URLSession` don't fetch or build SwiftNIO. Enable the trait where you
+depend on http-client:
 
 ```swift
-// Package.swift (swift-tools-version: 6.1 or later)
+// Package.swift (swift-tools-version: 6.4 or later)
 dependencies: [
   .package(
     url: "https://github.com/zunda-pixel/http-client",

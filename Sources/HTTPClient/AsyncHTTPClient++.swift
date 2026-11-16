@@ -1,5 +1,4 @@
-// Behind a trait so that the packages that only use URLSession don't build SwiftNIO. SwiftPM 6.2
-// or later doesn't fetch it either; SwiftPM 6.1 still resolves and fetches it.
+// Behind a trait so that the packages that only use URLSession don't fetch or build SwiftNIO.
 #if AsyncHTTPClient
   import AsyncHTTPClient
   import Foundation
