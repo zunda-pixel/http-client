@@ -3,6 +3,10 @@ name: CI
 on: pull_request
 
 # The jobs take a few minutes. The limits stop a hung test well before GitHub's default of 6 hours.
+#
+# Package.resolved pins only the dependencies without traits, so the tests with the trait resolve
+# the latest versions of async-http-client, SwiftNIO, and their dependencies. A new release of one
+# of them can fail a PR that doesn't change anything about it.
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,6 +14,7 @@ jobs:
     timeout-minutes: 20
     steps:
     - uses: actions/checkout@v7.0.1
+    - run: swift --version
     - name: Check that Package.resolved is the resolution without traits
       # Resolving without traits keeps the pins that a resolution with the trait added, so a
       # `git diff` after `swift test` wouldn't catch a committed trait-on Package.resolved.
@@ -35,6 +40,20 @@ jobs:
       run: swift test
     - name: Test with the AsyncHTTPClient trait
       run: swift test --traits AsyncHTTPClient
+  oldest-swift:
+    # The oldest Swift that Package.swift accepts (swift-tools-version: 6.1), which is also the
+    # first with package traits. No Package.resolved check: SwiftPM 6.1 pins the dependencies
+    # behind the trait too.
+    runs-on: ubuntu-latest
+    container: swift:6.1
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v7.0.1
+    - run: swift --version
+    - name: Test without traits
+      run: swift test
+    - name: Test with the AsyncHTTPClient trait
+      run: swift test --traits AsyncHTTPClient
   macos:
     # swift-corelibs-foundation doesn't hand an uploaded body to a URLProtocol, so only Apple
     # platforms check the body that URLSession uploads.
@@ -42,6 +61,7 @@ jobs:
     timeout-minutes: 20
     steps:
     - uses: actions/checkout@v7.0.1
+    - run: swift --version
     - name: Test without traits
       run: swift test
     - name: Test with the AsyncHTTPClient trait
@@ -52,4 +72,5 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7.0.1
+      - run: swift --version
       - run: swift format lint -r -p -s .

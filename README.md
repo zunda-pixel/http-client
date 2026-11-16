@@ -25,7 +25,9 @@ struct GitHubAPI<HTTPClient: HTTPClientProtocol>: Sendable {
       method: .get,
       url: URL(string: "https://api.github.com/users/\(login)")!,
       headerFields: [
-        .authorization: "Bearer \(token)"
+        .authorization: "Bearer \(token)",
+        // GitHub rejects a request without a User-Agent, and AsyncHTTPClient doesn't add one.
+        .userAgent: "my-app",
       ]
     )
     let (data, response) = try await httpClient.execute(for: request, from: nil)

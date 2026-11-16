@@ -24,7 +24,10 @@
       URL(string: "http://127.0.0.1:\(port)\(path)")!
     }
 
-    /// Runs `body` with a server, and closes the server when `body` returns.
+    /// Runs `body` with a server, and stops accepting connections when `body` returns.
+    ///
+    /// It doesn't close the connections it accepted. The client closes them: every response has
+    /// `Connection: close`, and the tests cancel the requests that get no whole response.
     static func run(_ body: (EchoServer) async throws -> Void) async throws {
       let (requests, receivedRequest) = AsyncStream.makeStream(of: Void.self)
       let (unfinishedResponses, sentUnfinishedResponse) = AsyncStream.makeStream(of: Void.self)
@@ -68,7 +71,7 @@
   /// Answers a request with the status of its `X-Echo-Status`; its method, URL, and authorization
   /// in the headers; and its `X-Echo-Body`, or else its body, as the body. It doesn't answer a
   /// request with `X-Echo-No-Response`, and answers a request with `X-Echo-Unfinished-Body` with a
-  /// body that doesn't end.
+  /// body that doesn't end. Every response has `Connection: close`.
   private final class EchoHandler: ChannelInboundHandler {
     /// The size of the body that doesn't end. Writing it completes only after the client has read
     /// most of it: it's several times the socket buffers of both ends (up to 4 MB each on macOS,
@@ -137,6 +140,10 @@
         HTTPField.Name.echoURL.rawName: "http://\(fields.first(name: "Host") ?? "")\(head.uri)",
         // One byte more than it sends when unfinished, so that the client waits for the rest.
         "Content-Length": String(body.readableBytes + (isUnfinished ? 1 : 0)),
+        // So that the client doesn't keep the connection. `HTTPClient.shared` keeps an idle
+        // connection for 10 minutes, so a later test whose server gets the same port could send
+        // its request on it, to this handler, whose streams have finished.
+        "Connection": "close",
       ]
       if let authorization = fields.first(name: "Authorization") {
         headers.add(name: HTTPField.Name.echoAuthorization.rawName, value: authorization)
