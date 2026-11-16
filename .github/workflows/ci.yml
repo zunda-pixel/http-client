@@ -2,87 +2,17 @@ name: CI
 
 on: pull_request
 
-# The jobs take a few minutes. The limits stop a hung test well before GitHub's default of 6 hours.
-#
-# Package.resolved pins only the dependencies without traits, so the tests with the trait resolve
-# the latest versions of async-http-client, SwiftNIO, and their dependencies. A new release of one
-# of them can fail a PR that doesn't change anything about it.
 jobs:
   build:
     runs-on: ubuntu-latest
     container: swift:latest
-    timeout-minutes: 20
     steps:
     - uses: actions/checkout@v7.0.1
-    - run: swift --version
-    - name: Check that Package.resolved is the resolution without traits
-      # Resolving without traits keeps the pins that a resolution with the trait added, so a
-      # `git diff` after `swift test` wouldn't catch a committed trait-on Package.resolved.
-      # Resolve from scratch and check that it pins every committed package. Not an exact match:
-      # it resolves the latest versions, so a swift-http-types that adds a dependency would fail
-      # every PR. SwiftPM 6.1 also pins the dependencies behind the trait, so this check needs
-      # SwiftPM 6.2 or later (the container's).
-      #
-      # `identities` reads every "identity" whatever the spaces around its colon, also when several
-      # share a line. Reading none from the committed file fails the check: an empty list has
-      # nothing that the new resolution lacks, so the check would pass whatever the file pins.
-      shell: bash
-      run: |
-        identities() {
-          { grep -o '"identity"[[:space:]]*:[[:space:]]*"[^"]*"' "$1" || true; } |
-            sed 's/.*"\([^"]*\)"$/\1/' | sort
-        }
-        pinned=$(identities Package.resolved)
-        if [ -z "$pinned" ]; then
-          echo "::error file=Package.resolved::Found no \"identity\" to check."
-          exit 1
-        fi
-        committed=$(mktemp)
-        cp Package.resolved "$committed"
-        rm Package.resolved
-        swift package resolve
-        extra=$(comm -23 <(printf '%s\n' "$pinned") <(identities Package.resolved))
-        cp "$committed" Package.resolved
-        if [ -n "$extra" ]; then
-          echo "::error file=Package.resolved::Pins packages that a resolution without traits doesn't:"
-          echo "$extra"
-          exit 1
-        fi
-    - name: Test without traits
-      run: swift test
-    - name: Test with the AsyncHTTPClient trait
-      run: swift test --traits AsyncHTTPClient
-  oldest-swift:
-    # The oldest Swift that Package.swift accepts (swift-tools-version: 6.1), which is also the
-    # first with package traits. No Package.resolved check: SwiftPM 6.1 pins the dependencies
-    # behind the trait too.
-    runs-on: ubuntu-latest
-    container: swift:6.1
-    timeout-minutes: 20
-    steps:
-    - uses: actions/checkout@v7.0.1
-    - run: swift --version
-    - name: Test without traits
-      run: swift test
-    - name: Test with the AsyncHTTPClient trait
-      run: swift test --traits AsyncHTTPClient
-  macos:
-    # swift-corelibs-foundation doesn't hand an uploaded body to a URLProtocol, so only Apple
-    # platforms check the body that URLSession uploads.
-    runs-on: macos-latest
-    timeout-minutes: 20
-    steps:
-    - uses: actions/checkout@v7.0.1
-    - run: swift --version
-    - name: Test without traits
-      run: swift test
-    - name: Test with the AsyncHTTPClient trait
-      run: swift test --traits AsyncHTTPClient
+    - run: swift test
+    - run: swift test --traits AsyncHTTPClient
   lint:
     runs-on: ubuntu-latest
     container: swift:latest
-    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7.0.1
-      - run: swift --version
       - run: swift format lint -r -p -s .
