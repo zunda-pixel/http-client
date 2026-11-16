@@ -85,21 +85,52 @@
           headerFields: [.echoNoResponse: "1"]
         )
 
-        await withTaskGroup(of: Void.self) { group in
-          group.addTask {
-            await #expect(throws: CancellationError.self) {
-              try await execute(request, from: nil, with: .asyncHTTPClient(.shared))
-            }
-          }
-          group.addTask {
-            for await _ in server.requests { return }
-          }
-          // Cancels the request once the server has it. Not waiting for the server alone: a
-          // request that ends before it reaches the server would leave that wait unfinished.
-          _ = await group.next()
-          group.cancelAll()
+        if await expectCancellation(of: request, once: server.requests) {
+          // The call threw; the connection closing shows that the request stopped too.
+          for await _ in server.closedConnections { break }
         }
       }
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func cancelsTheRequestWhileReceivingTheBody() async throws {
+      try await EchoServer.run { server in
+        let request = HTTPRequest(
+          method: .get,
+          url: server.url("/slow-body"),
+          headerFields: [.echoUnfinishedBody: "1"]
+        )
+
+        if await expectCancellation(of: request, once: server.unfinishedResponses) {
+          for await _ in server.closedConnections { break }
+        }
+      }
+    }
+  }
+
+  /// Sends `request`, cancels it once `signal` yields, and expects `CancellationError`. Returns
+  /// whether `signal` yielded before the request ended.
+  ///
+  /// Not waiting for `signal` alone: a request that ends before it would leave that wait
+  /// unfinished. Then the request's own error fails the test.
+  private func expectCancellation(
+    of request: HTTPRequest,
+    once signal: AsyncStream<Void>
+  ) async -> Bool {
+    await withTaskGroup(of: Bool.self) { group in
+      group.addTask {
+        await #expect(throws: CancellationError.self) {
+          try await execute(request, from: nil, with: .asyncHTTPClient(.shared))
+        }
+        return false
+      }
+      group.addTask {
+        for await _ in signal { return true }
+        return false
+      }
+      let signaled = await group.next() ?? false
+      group.cancelAll()
+      return signaled
     }
   }
 

@@ -9,6 +9,9 @@ extension HTTPField.Name {
   static let echoBody = Self("X-Echo-Body")!
   /// Makes the stub take the request and never answer it.
   static let echoNoResponse = Self("X-Echo-No-Response")!
+  /// Makes the stub send a large body but declare one more byte than it sends, so that the body
+  /// never ends (`EchoServer` only).
+  static let echoUnfinishedBody = Self("X-Echo-Unfinished-Body")!
 
   /// The method the stub received.
   static let echoMethod = Self("X-Echo-Method")!

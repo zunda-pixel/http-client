@@ -13,16 +13,24 @@ jobs:
     - name: Check that Package.resolved is the resolution without traits
       # Resolving without traits keeps the pins that a resolution with the trait added, so a
       # `git diff` after `swift test` wouldn't catch a committed trait-on Package.resolved.
-      # Resolve from scratch and compare the pinned packages instead. SwiftPM 6.1 also pins the
-      # dependencies behind the trait, so this check needs SwiftPM 6.2 or later (the container's).
+      # Resolve from scratch and check that it pins every committed package. Not an exact match:
+      # it resolves the latest versions, so a swift-http-types that adds a dependency would fail
+      # every PR. SwiftPM 6.1 also pins the dependencies behind the trait, so this check needs
+      # SwiftPM 6.2 or later (the container's).
       shell: bash
       run: |
         committed=$(mktemp)
         cp Package.resolved "$committed"
         rm Package.resolved
         swift package resolve
-        diff <(grep '"identity"' "$committed") <(grep '"identity"' Package.resolved)
+        identities() { sed -n 's/.*"identity" : "\(.*\)".*/\1/p' "$1" | sort; }
+        extra=$(comm -23 <(identities "$committed") <(identities Package.resolved))
         cp "$committed" Package.resolved
+        if [ -n "$extra" ]; then
+          echo "::error file=Package.resolved::Pins packages that a resolution without traits doesn't:"
+          echo "$extra"
+          exit 1
+        fi
     - name: Test without traits
       run: swift test
     - name: Test with the AsyncHTTPClient trait
