@@ -3,8 +3,6 @@
   import Foundation
   import HTTPClient
   import HTTPTypes
-  // For `HTTPRequest(method:url:headerFields:)`, which is in HTTPTypesFoundation before
-  // swift-http-types 1.5.0.
   import HTTPTypesFoundation
   import Testing
 

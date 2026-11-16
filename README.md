@@ -113,13 +113,3 @@ let api = GitHubAPI(token: "<#token#>", httpClient: .asyncHTTPClient(.shared))
 SwiftPM enables a trait for the whole package graph when any package enables it. If you get
 http-client through another package (an API client library), add http-client to your own
 dependencies with the trait, as above.
-
-This setup was checked with SwiftPM 6.1.3 and 6.4.2, including through API client libraries that
-require http-client `from: "0.3.0"`. SwiftPM 6.4.2 and earlier can fail with "exhausted
-attempts to resolve the dependencies graph" when only some of the packages that depend on
-http-client ask for the trait: for example, when you require http-client by `branch:` or `path:`
-and another package enables the trait, or when the request comes from a package deeper in the
-graph ([swiftlang/swift-package-manager#10754](https://github.com/swiftlang/swift-package-manager/pull/10754),
-[#10755](https://github.com/swiftlang/swift-package-manager/pull/10755)). The packages it leaves
-unresolved are async-http-client and SwiftNIO, so depending on async-http-client yourself, as
-above, avoids it.
