@@ -28,6 +28,7 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/apple/swift-http-types", from: "1.3.0"),
     .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.33.0"),
+    .package(url: "https://github.com/apple/swift-nio.git", from: "2.81.0"),
   ],
   targets: [
     .target(
@@ -36,6 +37,16 @@ let package = Package(
         .product(
           name: "AsyncHTTPClient",
           package: "async-http-client",
+          condition: .when(traits: ["AsyncHTTPClient"])
+        ),
+        .product(
+          name: "NIOCore",
+          package: "swift-nio",
+          condition: .when(traits: ["AsyncHTTPClient"])
+        ),
+        .product(
+          name: "NIOHTTP1",
+          package: "swift-nio",
           condition: .when(traits: ["AsyncHTTPClient"])
         ),
         .product(name: "HTTPTypes", package: "swift-http-types"),
@@ -49,6 +60,21 @@ let package = Package(
         .product(
           name: "AsyncHTTPClient",
           package: "async-http-client",
+          condition: .when(traits: ["AsyncHTTPClient"])
+        ),
+        .product(
+          name: "NIOCore",
+          package: "swift-nio",
+          condition: .when(traits: ["AsyncHTTPClient"])
+        ),
+        .product(
+          name: "NIOHTTP1",
+          package: "swift-nio",
+          condition: .when(traits: ["AsyncHTTPClient"])
+        ),
+        .product(
+          name: "NIOPosix",
+          package: "swift-nio",
           condition: .when(traits: ["AsyncHTTPClient"])
         ),
         .product(name: "HTTPTypes", package: "swift-http-types"),

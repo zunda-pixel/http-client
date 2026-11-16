@@ -14,5 +14,9 @@ public protocol HTTPClientProtocol: Sendable {
   /// response.
   ///
   /// Returns the response whatever its status, and throws only when no response arrives.
+  ///
+  /// The errors are those of the conforming type's HTTP stack, so they differ by conformance.
+  /// For example, for a request without a URL, `URLSession` throws an error of
+  /// HTTPTypesFoundation, and `AsyncHTTPClient.HTTPClient` throws `URLError(.badURL)`.
   func execute(for request: HTTPRequest, from body: Data?) async throws -> (Data, HTTPResponse)
 }

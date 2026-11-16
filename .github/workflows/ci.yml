@@ -8,6 +8,29 @@ jobs:
     container: swift:latest
     steps:
     - uses: actions/checkout@v7.0.1
+    - name: Check that Package.resolved is the resolution without traits
+      # Resolving without traits keeps the pins that a resolution with the trait added, so a
+      # `git diff` after `swift test` wouldn't catch a committed trait-on Package.resolved.
+      # Resolve from scratch and compare the pinned packages instead. SwiftPM 6.1 also pins the
+      # dependencies behind the trait, so this check needs SwiftPM 6.2 or later (the container's).
+      shell: bash
+      run: |
+        committed=$(mktemp)
+        cp Package.resolved "$committed"
+        rm Package.resolved
+        swift package resolve
+        diff <(grep '"identity"' "$committed") <(grep '"identity"' Package.resolved)
+        cp "$committed" Package.resolved
+    - name: Test without traits
+      run: swift test
+    - name: Test with the AsyncHTTPClient trait
+      run: swift test --traits AsyncHTTPClient
+  macos:
+    # swift-corelibs-foundation doesn't hand an uploaded body to a URLProtocol, so only Apple
+    # platforms check the body that URLSession uploads.
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v7.0.1
     - name: Test without traits
       run: swift test
     - name: Test with the AsyncHTTPClient trait

@@ -70,6 +70,14 @@ import Testing
     #expect(response.status == .notFound)
     #expect(String(decoding: data, as: UTF8.self) == "not found")
   }
+
+  @Test func rejectsARequestWithoutAURL() async throws {
+    let request = HTTPRequest(method: .get, scheme: nil, authority: nil, path: "/")
+
+    await #expect(throws: (any Error).self) {
+      try await execute(request, from: nil, with: .urlSession(session))
+    }
+  }
 }
 
 /// Calls the client through the protocol, as an API client does.
@@ -79,16 +87,6 @@ private func execute(
   with client: some HTTPClientProtocol
 ) async throws -> (Data, HTTPResponse) {
   try await client.execute(for: request, from: body)
-}
-
-extension HTTPField.Name {
-  /// The status the stub answers with (200 when absent).
-  fileprivate static let echoStatus = Self("X-Echo-Status")!
-  /// The body the stub answers with (the uploaded body when absent).
-  fileprivate static let echoBody = Self("X-Echo-Body")!
-  fileprivate static let echoMethod = Self("X-Echo-Method")!
-  fileprivate static let echoURL = Self("X-Echo-URL")!
-  fileprivate static let echoAuthorization = Self("X-Echo-Authorization")!
 }
 
 /// Answers every request without the network: it echoes the method, URL, and authorization in

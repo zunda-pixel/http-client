@@ -6,9 +6,10 @@ import HTTPTypesFoundation
   import FoundationNetworking
 #endif
 
-// The availability is that of HTTPTypesFoundation's async `URLSession` methods. A lower one
-// compiles only while the toolchain raises the deployment target above it.
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+// Calls HTTPTypesFoundation's `data(for:)` and `upload(for:from:)` without a delegate, which
+// need only macOS 10.15 and iOS 13. The overloads that take a delegate need macOS 12 and iOS 15,
+// so passing one would drop the older systems.
+@available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, visionOS 1.0, *)
 extension URLSession: HTTPClientProtocol {
   public func execute(
     for request: HTTPRequest,
@@ -22,7 +23,7 @@ extension URLSession: HTTPClientProtocol {
   }
 }
 
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, visionOS 1.0, *)
 extension HTTPClientProtocol where Self == URLSession {
   public static func urlSession(_ urlSession: Self) -> Self {
     urlSession

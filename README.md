@@ -63,14 +63,16 @@ let api = GitHubAPI(token: "<#token#>", httpClient: .urlSession(.shared))
 let user = try await api.user(login: "zunda-pixel")
 ```
 
-`URLSession` conforms on macOS 12, iOS 15, watchOS 8, tvOS 15, and visionOS 1 or later, and on
-Linux. On Linux, `URLSession` is in FoundationNetworking, so import it to name `URLSession`.
+`URLSession` conforms on every platform the package supports (macOS 10.15, iOS 13, watchOS 6,
+tvOS 13, and visionOS 1 or later, and Linux). On Linux, `URLSession` is in FoundationNetworking,
+so import it to name `URLSession`.
 
 ## AsyncHTTPClient
 
 The conformance of AsyncHTTPClient's `HTTPClient` is behind the `AsyncHTTPClient` trait, so that
-packages that only use `URLSession` don't fetch or build SwiftNIO. Enable the trait where you
-depend on http-client:
+packages that only use `URLSession` don't build SwiftNIO. With SwiftPM 6.2 or later, they don't
+fetch it either; SwiftPM 6.1 still resolves and fetches it. Enable the trait where you depend on
+http-client:
 
 ```swift
 // Package.swift (swift-tools-version: 6.1 or later)
@@ -103,3 +105,12 @@ let api = GitHubAPI(token: "<#token#>", httpClient: .asyncHTTPClient(.shared))
 SwiftPM enables a trait for the whole package graph when any package enables it. If you get
 http-client through another package (an API client library), add http-client to your own
 dependencies with the trait, as above.
+
+This setup was checked with SwiftPM 6.4.2. SwiftPM 6.4.2 and earlier can fail with "exhausted
+attempts to resolve the dependencies graph" when only some of the packages that depend on
+http-client ask for the trait: for example, when you require http-client by `branch:` or `path:`
+and another package enables the trait, or when the request comes from a package deeper in the
+graph ([swiftlang/swift-package-manager#10754](https://github.com/swiftlang/swift-package-manager/pull/10754),
+[#10755](https://github.com/swiftlang/swift-package-manager/pull/10755)). The packages it leaves
+unresolved are async-http-client and SwiftNIO, so depending on async-http-client yourself, as
+above, avoids it.
